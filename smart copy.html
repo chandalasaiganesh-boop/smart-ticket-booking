@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Ticket Booking — Full</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent1:#5b5ff7; --accent2:#5ce0ff; --bg:#eef8ff; --card:#ffffff; --muted:#6b7280; --text:#052035; --train:#5b5ff7; --bus:#22c55e; --flight:#5ce0ff; --movie:#fb7185; --show:#f59e0b;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1224; --card:#0f172a; --muted:#94a3b8; --text:#e5e7eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Montserrat,system-ui,Arial}
+  body{background:var(--bg);color:var(--text);min-height:100vh}
+  .container{max-width:1100px;margin:20px auto;padding:18px}
+  .login-page{min-height:78vh;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{width:420px;max-width:95%;background:rgba(255,255,255,0.35);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border:1px solid rgba(255,255,255,0.45);border-radius:16px;padding:24px;box-shadow:0 24px 70px rgba(11,18,36,0.16);display:flex;flex-direction:column;gap:14px;position:relative}
+  .login-card::before{content:"";position:absolute;inset:-2px;border-radius:18px;background:conic-gradient(from 180deg, rgba(91,95,247,0.28), rgba(92,224,255,0.28), rgba(91,95,247,0.28));filter:blur(18px);z-index:-1}
+  .login-card .logo-box{width:120px;height:120px;margin:0 auto 8px;border-radius:16px;overflow:hidden;box-shadow:0 26px 60px rgba(11,18,36,0.18)}
+  .login-card h2{margin:10px 0 10px;text-align:center;font-size:22px}
+  .login-card label{display:block;margin-top:8px;font-size:13px;color:#334155}
+  .login-card input{width:100%;padding:12px;border-radius:10px;border:1px solid #d1d5db;margin-top:6px;font-size:14px}
+  .login-actions{display:flex;gap:8px;margin-top:10px}
+  .login-primary{padding:12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;font-weight:700;cursor:pointer;width:100%}
+  .login-art{margin-top:6px;margin-bottom:4px;border-radius:12px;overflow:hidden}
+  .login-art img{width:100%;height:120px;object-fit:cover;display:block}
+  .login-form{display:flex;flex-direction:column;gap:6px}
+  
+
+  /* First Page */
+  .first-page{
+    height:78vh;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    position:relative;overflow:hidden;
+  }
+  .first-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.08))}
+  .hero{z-index:2;text-align:center;color:#fff;padding:28px}
+  .logo-box{width:180px;height:180px;margin:0 auto 16px;border-radius:18px;overflow:hidden;border:6px solid rgba(255,255,255,0.12);box-shadow:0 18px 50px rgba(11,18,36,0.28)}
+  .logo-box img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero h1{font-size:30px;margin-bottom:8px;text-shadow:0 8px 28px rgba(0,0,0,0.2)}
+  .hero p{opacity:.95;margin-bottom:16px}
+  .btn-primary{background:#fff;color:#061229;padding:12px 26px;border-radius:999px;border:0;font-weight:700;cursor:pointer;box-shadow:0 12px 30px rgba(11,18,36,0.22)}
+  .btn-primary:hover{transform:translateY(-4px)}
+
+  /* Home / second page */
+  .home{display:none}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .mini{width:56px;height:56px;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08)}
+  .mini img{width:100%;height:100%;object-fit:cover}
+  .location{color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer}
+  .btn-loc{background:#fff;color:#061229;font-weight:700}
+  .btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,0.4),rgba(255,255,255,0.3));padding:16px;border-radius:14px;cursor:pointer;box-shadow:0 10px 30px rgba(2,6,23,0.06);transition:transform .2s, box-shadow .3s, background .3s;overflow:hidden;border:1px solid rgba(255,255,255,0.5);backdrop-filter:blur(6px)}
+  .card::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,0) 20%,rgba(255,255,255,0.5) 50%,rgba(255,255,255,0) 80%);transform:translateX(-100%);}
+  .card:hover{transform:translateY(-8px);box-shadow:0 18px 50px rgba(2,6,23,0.12)}
+  .card:hover::after{animation:shimmer .9s ease forwards}
+  .card .emoji{font-size:34px;transition:transform .2s}
+  .card:hover .emoji{transform:translateY(-6px) scale(1.08)}
+  .card h3{margin-top:10px;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:13px}
+  .rate{margin-top:10px;padding:6px;border-radius:10px;background:linear-gradient(90deg,rgba(91,95,247,0.12),rgba(92,224,255,0.12));font-weight:700;color:#052035;text-align:center}
+
+  .card[data-type="train"]{outline:1px solid rgba(91,95,247,0.22)}
+  .card[data-type="train"]:hover{box-shadow:0 24px 60px rgba(91,95,247,0.26)}
+  .card[data-type="bus"]{outline:1px solid rgba(34,197,94,0.22)}
+  .card[data-type="bus"]:hover{box-shadow:0 24px 60px rgba(34,197,94,0.26)}
+  .card[data-type="flight"]{outline:1px solid rgba(92,224,255,0.22)}
+  .card[data-type="flight"]:hover{box-shadow:0 24px 60px rgba(92,224,255,0.26)}
+  .card[data-type="movie"]{outline:1px solid rgba(251,113,133,0.22)}
+  .card[data-type="movie"]:hover{box-shadow:0 24px 60px rgba(251,113,133,0.26)}
+  .card[data-type="show"]{outline:1px solid rgba(245,158,11,0.22)}
+  .card[data-type="show"]:hover{box-shadow:0 24px 60px rgba(245,158,11,0.26)}
+
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  @keyframes fadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+
+  :root[data-theme="dark"] .login-card{background:rgba(16,23,42,0.6);border:1px solid rgba(255,255,255,0.08);box-shadow:0 26px 80px rgba(0,0,0,0.5)}
+  :root[data-theme="dark"] .card{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.04));border:1px solid rgba(255,255,255,0.12)}
+  :root[data-theme="dark"] .rate{background:linear-gradient(90deg,rgba(91,95,247,0.18),rgba(92,224,255,0.18));color:var(--text)}
+  :root[data-theme="dark"] .btn-outline{border-color:rgba(255,255,255,0.16);color:var(--text)}
+  :root[data-theme="dark"] .btn-loc{background:#1f2937;color:var(--text)}
+
+  /* Booking Page */
+  .booking{display:none;margin-top:12px}
+  .back{padding:8px 14px;border-radius:10px;background:#0b1224;color:#fff;border:0;cursor:pointer;margin-bottom:12px}
+  .booking-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+  .panel{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 18px 40px rgba(2,6,23,0.06)}
+  .panel h3{margin-bottom:12px}
+  label{display:block;margin-top:8px;font-size:13px;color:#334155}
+  input, select{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;margin-top:6px;font-size:14px}
+  .row{display:flex;gap:10px}
+  .row .col{flex:1}
+  .primary{padding:12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;font-weight:700;cursor:pointer;margin-top:12px}
+  .secondary{padding:10px;border-radius:10px;border:0;background:#0b84ff;color:#fff;cursor:pointer;margin-top:12px}
+
+  .price{padding:12px;border-radius:10px;background:linear-gradient(180deg,#f7fdff,#eef8ff);font-weight:700;text-align:center}
+  .preview{padding:12px;border-radius:8px;background:#fff;border:1px dashed #cbd5e1;margin-top:12px}
+
+  .seat-section{margin-top:8px}
+  .seat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+  .seat{padding:8px;border:1px solid #cbd5e1;border-radius:8px;text-align:center;cursor:pointer}
+  .seat.selected{background:#0b84ff;color:#fff;border-color:#0b84ff}
+
+  /* canvas container */
+  #canvasWrap{display:none;margin-top:12px;text-align:center}
+  #ticketCanvas{box-shadow:0 10px 28px rgba(0,0,0,0.12);border-radius:8px}
+
+  /* responsive */
+  @media (max-width:900px){ .booking-grid{grid-template-columns:1fr} .mini{width:48px;height:48px} }
+  @media (max-width:520px){ .logo-box{width:140px;height:140px} .hero h1{font-size:24px} }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <section class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="login-art">
+        <img id="loginArt" src="images project\train.jpg" alt="travel">
+      </div>
+      <h2>Login</h2>
+      <div class="login-form">
+        <label>Name</label>
+        <input type="text" id="loginName" placeholder="Your name">
+        <label>Mobile</label>
+        <input type="tel" id="loginMobile" placeholder="10-digit mobile number">
+        <label>Email ID</label>
+        <input type="email" id="loginEmail" placeholder="Your email ID">
+        <div class="login-actions">
+          <button class="login-primary" id="loginBtn">Login</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIRST PAGE -->
+  <section class="first-page" id="firstPage">
+    <div class="first-overlay"></div>
+    <div class="hero">
+      <div class="logo-box">
+        <img id="mainLogo" src="images project\train.jpg" alt="logo">
+      </div>
+      <h1>SMART TICKET BOOKING</h1>
+      <p>Book Trains, Buses, Flights, Movies & Shows — fast & beautiful.</p>
+      <button class="btn-primary" id="enterBtn">Enter</button>
+    </div>
+  </section>
+
+  <!-- HOME PAGE -->
+  <section class="home" id="homePage">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mini"><img id="miniLogo" src="images project/fliht.jpg" alt="mini"></div>
+        <div>
+          <div style="font-weight:700">Smart Ticket Booking</div>
+          <div class="location" id="locText">Location: not set</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn btn-loc" id="getLocBtn">📍 Get Location</button>
+        <button class="btn btn-outline" id="myBookingsBtn">My Bookings</button>
+        <button class="btn btn-outline" id="themeToggleBtn">Dark Mode</button>
+        <button class="btn btn-outline" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <div class="panel" id="bookingsPanel" style="display:none">
+      <h3>My Bookings</h3>
+      <div id="bookingsList"></div>
+    </div>
+
+    <div class="grid" id="servicesGrid" style="animation:fadeUp .4s ease both">
+      <div class="card" data-type="train">
+        <div class="emoji">🚆</div>
+        <h3>Train</h3>
+        <p>Search trains, routes & station times</p>
+        <div class="rate">₹120 — ₹1,500</div>
+      </div>
+
+      <div class="card" data-type="bus">
+        <div class="emoji">🚌</div>
+        <h3>Bus</h3>
+        <p>Intercity & interstate buses</p>
+        <div class="rate">₹80 — ₹900</div>
+      </div>
+
+      <div class="card" data-type="flight">
+        <div class="emoji">✈️</div>
+        <h3>Flight</h3>
+        <p>Domestic & international flights</p>
+        <div class="rate">₹2,500 — ₹12,000</div>
+      </div>
+
+      <div class="card" data-type="movie">
+        <div class="emoji">🎬</div>
+        <h3>Movie</h3>
+        <p>Cinema shows & timings</p>
+        <div class="rate">₹150 — ₹350</div>
+      </div>
+
+      <div class="card" data-type="show">
+        <div class="emoji">🎤</div>
+        <h3>Shows</h3>
+        <p>Events, concerts & stage shows</p>
+        <div class="rate">₹200 — ₹1,800</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING PAGE -->
+  <section class="booking" id="bookingPage">
+    <button class="back" id="backBtn">⬅ Back</button>
+
+    <div class="booking-grid">
+      <div class="panel">
+        <h3 id="bookingTitle">Ticket Booking</h3>
+
+        <label>Service</label>
+        <input type="text" id="serviceInput" readonly style="background:#f8fafc">
+
+        <label id="fromLabel">From</label>
+        <input type="text" id="fromInput" placeholder="Starting location">
+
+        <label id="toLabel">To</label>
+        <input type="text" id="toInput" placeholder="Destination">
+
+        <div class="row">
+          <div class="col">
+            <label>Date</label>
+            <input type="date" id="dateInput">
+          </div>
+          <div class="col">
+            <label id="timeLabel">Time</label>
+            <input type="time" id="timeInput">
+          </div>
+        </div>
+
+        <label id="paxLabel">Passengers</label>
+        <select id="paxInput">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        </select>
+
+        <label>Seat Type</label>
+        <select id="seatInput">
+          <option value="general">General / Economy</option>
+          <option value="premium">Premium</option>
+          <option value="vip">VIP / AC</option>
+        </select>
+
+        <label id="movieNameLabel" style="display:none">Movie Name</label>
+        <input type="text" id="movieNameInput" placeholder="Movie title" style="display:none">
+
+        <label id="theatreNameLabel" style="display:none">Theatre</label>
+        <input type="text" id="theatreNameInput" placeholder="Theatre name" style="display:none">
+
+        <label id="eventNameLabel" style="display:none">Event Name</label>
+        <input type="text" id="eventNameInput" placeholder="Event name" style="display:none">
+
+        <label id="eventLocationLabel" style="display:none">Location</label>
+        <input type="text" id="eventLocationInput" placeholder="Event location" style="display:none">
+
+        <div id="seatSection" class="seat-section" style="display:none">
+          <div id="seatHint" style="margin-top:8px;color:#475569;font-size:13px"></div>
+          <div id="seatGrid" class="seat-grid"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="primary" id="estimateBtn">Estimate Price</button>
+          <button class="secondary" id="confirmBtn">Confirm & Preview</button>
+        </div>
+
+        <div style="margin-top:12px" id="priceBox">Estimated: —</div>
+        <div style="margin-top:10px;color:#475569;font-size:13px">This demo estimates prices. For real fares use APIs.</div>
+      </div>
+
+      <div class="panel">
+        <h3>Ticket Preview</h3>
+        <div class="preview" id="previewBox">No ticket yet. Fill details and click Confirm & Preview.</div>
+
+        <div style="margin-top:12px">
+          <button class="primary" id="downloadBtn">Download Ticket (PNG)</button>
+        </div>
+
+        <div id="canvasWrap">
+          <canvas id="ticketCanvas" width="800" height="380"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  /* ---------- Config & State ---------- */
+  let logoPath = 'C:\\Users\\chand\\EDUCATION\\images project\\IMG-20251115-WA0008.jpg';
+  const loginPage = document.getElementById('loginPage');
+  const loginName = document.getElementById('loginName');
+  const loginMobile = document.getElementById('loginMobile');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginLogoEl = document.getElementById('loginLogo');
+  const mainLogoEl = document.getElementById('mainLogo');
+  const miniLogoEl = document.getElementById('miniLogo');
+  const loginArtEl = document.getElementById('loginArt');
+  const enterBtn = document.getElementById('enterBtn');
+  const firstPage = document.getElementById('firstPage');
+  const homePage = document.getElementById('homePage');
+  const bookingPage = document.getElementById('bookingPage');
+  const services = document.querySelectorAll('.card');
+  const locText = document.getElementById('locText');
+  const getLocBtn = document.getElementById('getLocBtn');
+  const backBtn = document.getElementById('backBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const myBookingsBtn = document.getElementById('myBookingsBtn');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const bookingsPanel = document.getElementById('bookingsPanel');
+  const bookingsList = document.getElementById('bookingsList');
+  const bookingTitle = document.getElementById('bookingTitle');
+  const serviceInput = document.getElementById('serviceInput');
+  const fromInput = document.getElementById('fromInput');
+  const toInput = document.getElementById('toInput');
+  const dateInput = document.getElementById('dateInput');
+  const timeInput = document.getElementById('timeInput');
+  const paxInput = document.getElementById('paxInput');
+  const seatInput = document.getElementById('seatInput');
+  const seatSection = document.getElementById('seatSection');
+  const seatGrid = document.getElementById('seatGrid');
+  const seatHint = document.getElementById('seatHint');
+  const movieNameInput = document.getElementById('movieNameInput');
+  const theatreNameInput = document.getElementById('theatreNameInput');
+  const movieNameLabel = document.getElementById('movieNameLabel');
+  const theatreNameLabel = document.getElementById('theatreNameLabel');
+  const eventNameInput = document.getElementById('eventNameInput');
+  const eventLocationInput = document.getElementById('eventLocationInput');
+  const eventNameLabel = document.getElementById('eventNameLabel');
+  const eventLocationLabel = document.getElementById('eventLocationLabel');
+  const timeLabel = document.getElementById('timeLabel');
+  const fromLabel = document.getElementById('fromLabel');
+  const toLabel = document.getElementById('toLabel');
+  const paxLabel = document.getElementById('paxLabel');
+  const estimateBtn = document.getElementById('estimateBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
+  const priceBox = document.getElementById('priceBox');
+  const previewBox = document.getElementById('previewBox');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const ticketCanvas = document.getElementById('ticketCanvas');
+  const ctx = ticketCanvas.getContext('2d');
+
+  let currentService = null;
+  let lastTicket = null;
+  let selectedSeats = [];
+
+  const serviceRates = {
+    train: {min:120, max:1500, base:300},
+    bus: {min:80, max:900, base:200},
+    flight: {min:2500, max:12000, base:4500},
+    movie: {min:150, max:350, base:220},
+    show: {min:200, max:1800, base:600}
+  };
+
+  /* ---------- Page switching ---------- */
+  function showFirst(){ loginPage.style.display='none'; firstPage.style.display='flex'; homePage.style.display='none'; bookingPage.style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); }
+  function showHome(){ loginPage.style.display='none'; firstPage.style.display='none'; homePage.style.display='block'; bookingPage.style.display='none'; }
+  function showBooking(){ loginPage.style.display='none'; firstPage.style.display='none'; homePage.style.display='none'; bookingPage.style.display='block'; }
+  function showLogin(){ loginPage.style.display='flex'; firstPage.style.display='none'; homePage.style.display='none'; bookingPage.style.display='none'; window.scrollTo({top:0,behavior:'smooth'}); }
+
+  const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  if(storedUser){ showHome(); } else { showLogin(); }
+
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    if(themeToggleBtn){ themeToggleBtn.textContent = t === 'dark' ? 'Light Mode' : 'Dark Mode'; }
+  }
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+  if(themeToggleBtn){
+    themeToggleBtn.addEventListener('click', ()=>{
+      const curr = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = curr === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+    });
+  }
+
+  // normalize local Windows file paths for images
+  function toFileUrl(p){
+    if(!p) return p;
+    if(/^([a-zA-Z]:\\)/.test(p)){
+      const drive = p.substring(0,2).replace('\\','');
+      const rest = p.substring(2).replace(/\\/g,'/');
+      return 'file:///' + drive + rest.replace(/\s/g,'%20');
+    }
+    return p;
+  }
+  if(loginLogoEl){
+    const rawLogo = loginLogoEl.getAttribute('src');
+    const urlLogo = toFileUrl(rawLogo);
+    loginLogoEl.src = urlLogo;
+    logoPath = urlLogo;
+  }
+  if(loginArtEl){
+    const rawArt = loginArtEl.getAttribute('src') || (loginLogoEl && loginLogoEl.getAttribute('src')) || '';
+    const urlArt = toFileUrl(rawArt);
+    loginArtEl.onerror = ()=>{ if(loginLogoEl){ loginArtEl.src = loginLogoEl.src; } };
+    loginArtEl.src = urlArt;
+  }
+
+  if(mainLogoEl){
+    const rawMain = mainLogoEl.getAttribute('src');
+    const urlMain = toFileUrl(rawMain);
+    mainLogoEl.src = urlMain;
+    logoPath = urlMain;
+  }
+  if(miniLogoEl){
+    const rawMini = miniLogoEl.getAttribute('src');
+    const urlMini = toFileUrl(rawMini);
+    miniLogoEl.src = urlMini;
+  }
+
+  loginBtn.addEventListener('click', ()=>{
+    const name = loginName.value.trim();
+    const mobile = loginMobile.value.trim();
+    if(!name || !mobile){ alert('Enter name and mobile'); return; }
+    if(!/^\d{10}$/.test(mobile)){ alert('Enter valid 10-digit mobile'); return; }
+    localStorage.setItem('user', JSON.stringify({name, mobile}));
+    showHome();
+  });
+
+  enterBtn.addEventListener('click', ()=> {
+    // animate
+    firstPage.style.opacity = '0';
+    firstPage.style.transform = 'scale(.98)';
+    setTimeout(()=> showHome(), 250);
+  });
+
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', ()=>{
+      localStorage.removeItem('user');
+      lastTicket = null;
+      currentService = null;
+      showLogin();
+    });
+  }
+
+  /* ---------- Location ---------- */
+  getLocBtn.addEventListener('click', ()=> {
+    if(!navigator.geolocation){ locText.textContent = 'Geolocation not supported'; return; }
+    locText.textContent = 'Locating...';
+    navigator.geolocation.getCurrentPosition(pos=>{
+      locText.textContent = `Lat: ${pos.coords.latitude.toFixed(4)}, Lon: ${pos.coords.longitude.toFixed(4)}`;
+    }, err=>{
+      locText.textContent = 'Location permission denied or unavailable';
+    }, {timeout:10000});
+  });
+
+  /* ---------- Open booking on card click ---------- */
+  services.forEach(s=>{
+    s.addEventListener('click', ()=>{
+      const type = s.dataset.type;
+      openBooking(type);
+    });
+  });
+
+  if(myBookingsBtn){
+    myBookingsBtn.addEventListener('click', ()=>{
+      renderBookings();
+      const d = bookingsPanel.style.display;
+      bookingsPanel.style.display = (d === 'none' || !d) ? 'block' : 'none';
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+
+  function renderBookings(){
+    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+    if(!tickets.length){ bookingsList.innerHTML = '<div style="color:#475569;font-size:13px">No bookings yet.</div>'; return; }
+    bookingsList.innerHTML = tickets.map(t=>{
+      return `
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px;border:1px dashed #cbd5e1;border-radius:8px;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700">${t.service} • ₹ ${Number(t.price).toLocaleString()}</div>
+          <div style="color:#475569;font-size:13px">${t.from} → ${t.to} • ${t.date} ${t.time} • ${t.pax} • ${capitalize(t.seat)}</div>
+          <div style="color:#334155;font-size:13px">Passenger: ${t.user && t.user.name ? t.user.name : 'Guest'} • ${t.user && t.user.mobile ? t.user.mobile : '-'}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-outline" data-ref="${t.ref}">Open</button>
+          <button class="btn btn-outline" data-del-ref="${t.ref}">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+    bookingsList.querySelectorAll('button[data-ref]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const ref = b.dataset.ref;
+        const tickets2 = JSON.parse(localStorage.getItem('tickets') || '[]');
+        const t = tickets2.find(x=> x.ref === ref);
+        if(t){
+          openBooking(t.service.toLowerCase());
+          fromInput.value = t.from;
+          toInput.value = t.to;
+          dateInput.value = t.date;
+          timeInput.value = t.time;
+          paxInput.value = String(t.pax);
+          seatInput.value = t.seat;
+          lastTicket = t;
+          renderPreview(t);
+        }
+      });
+    });
+    bookingsList.querySelectorAll('button[data-del-ref]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const ref = b.dataset.delRef;
+        const arr = JSON.parse(localStorage.getItem('tickets') || '[]');
+        const idx = arr.findIndex(x=> x.ref === ref);
+        if(idx >= 0){
+          if(confirm('Delete this booking?')){
+            arr.splice(idx,1);
+            localStorage.setItem('tickets', JSON.stringify(arr));
+            renderBookings();
+          }
+        }
+      });
+    });
+  }
+
+  function openBooking(type){
+    currentService = type;
+    bookingTitle.textContent = `${type.toUpperCase()} TICKET BOOKING`;
+    serviceInput.value = type.toUpperCase();
+    // defaults
+    const today = new Date().toISOString().slice(0,10);
+    dateInput.value = today;
+    timeInput.value = '09:00';
+    fromInput.value = '';
+    toInput.value = '';
+    paxInput.value = '1';
+    seatInput.value = 'general';
+    priceBox.textContent = 'Estimated: —';
+    previewBox.innerHTML = 'Fill details and click Confirm & Preview.';
+    canvasWrap.style.display = 'none';
+    selectedSeats = [];
+    if(type === 'movie' || type === 'show'){
+      fromLabel.style.display = 'none';
+      toLabel.style.display = 'none';
+      fromInput.style.display = 'none';
+      toInput.style.display = 'none';
+      seatSection.style.display = 'block';
+      const items = Array.from({length:20}, (_,i)=> String(i+1));
+      seatGrid.innerHTML = items.map(s=>`<div class="seat" data-seat="${s}">${s}</div>`).join('');
+      seatGrid.querySelectorAll('.seat').forEach(el=>{
+        el.addEventListener('click', ()=>{
+          const seat = el.getAttribute('data-seat');
+          const idx = selectedSeats.indexOf(seat);
+          if(idx >= 0){ selectedSeats.splice(idx,1); el.classList.remove('selected'); }
+          else { selectedSeats.push(seat); el.classList.add('selected'); }
+          const count = selectedSeats.length;
+          seatHint.textContent = (type==='movie') ? `Selected ${count} seat(s)` : `Selected ${count} seat(s)`;
+        });
+      });
+      paxInput.addEventListener('change', ()=>{
+        const p = Number(paxInput.value || 1);
+        seatHint.textContent = `Select up to ${p} seat(s)`;
+        selectedSeats = [];
+        seatGrid.querySelectorAll('.seat').forEach(el=> el.classList.remove('selected'));
+      });
+    } else {
+      fromLabel.style.display = '';
+      toLabel.style.display = '';
+      fromInput.style.display = '';
+      toInput.style.display = '';
+      seatSection.style.display = 'none';
+      seatGrid.innerHTML = '';
+      seatHint.textContent = '';
+    }
+
+    if(type === 'movie'){
+      paxLabel.style.display = 'none';
+      paxInput.style.display = 'none';
+      movieNameLabel.style.display = '';
+      movieNameInput.style.display = '';
+      theatreNameLabel.style.display = '';
+      theatreNameInput.style.display = '';
+      timeLabel.textContent = 'Show Time';
+      seatHint.textContent = 'Select seats';
+      eventNameLabel.style.display = 'none';
+      eventNameInput.style.display = 'none';
+      eventLocationLabel.style.display = 'none';
+      eventLocationInput.style.display = 'none';
+    } else if(type === 'show'){
+      paxLabel.style.display = 'none';
+      paxInput.style.display = 'none';
+      movieNameLabel.style.display = 'none';
+      movieNameInput.style.display = 'none';
+      theatreNameLabel.style.display = 'none';
+      theatreNameInput.style.display = 'none';
+      eventNameLabel.style.display = '';
+      eventNameInput.style.display = '';
+      eventLocationLabel.style.display = '';
+      eventLocationInput.style.display = '';
+      timeLabel.textContent = 'Event Time';
+      seatHint.textContent = 'Select seats';
+    } else {
+      paxLabel.style.display = '';
+      paxInput.style.display = '';
+      movieNameLabel.style.display = 'none';
+      movieNameInput.style.display = 'none';
+      theatreNameLabel.style.display = 'none';
+      theatreNameInput.style.display = 'none';
+      eventNameLabel.style.display = 'none';
+      eventNameInput.style.display = 'none';
+      eventLocationLabel.style.display = 'none';
+      eventLocationInput.style.display = 'none';
+      timeLabel.textContent = 'Time';
+    }
+    showBooking();
+  }
+
+  backBtn.addEventListener('click', ()=> {
+    showHome();
+  });
+
+  /* ---------- Price estimate ---------- */
+  estimateBtn.addEventListener('click', ()=> {
+    if(!currentService) return alert('Choose a service.');
+    const base = serviceRates[currentService].base;
+    const seat = seatInput.value;
+    const pax = (currentService === 'movie' || currentService === 'show') ? Math.max(selectedSeats.length, 1) : Number(paxInput.value || 1);
+    let mult = 1;
+    if(seat === 'premium') mult = 1.5;
+    if(seat === 'vip') mult = 2.2;
+    const raw = Math.round(base * mult * pax + Math.random()*(base*0.2));
+    const min = serviceRates[currentService].min * pax;
+    const max = serviceRates[currentService].max * pax;
+    const price = Math.max(Math.min(raw, max), min);
+    priceBox.textContent = `Estimated: ₹ ${price.toLocaleString()}`;
+  });
+
+  /* ---------- Confirm & Preview ---------- */
+  confirmBtn.addEventListener('click', ()=> {
+    if(!currentService) return alert('Choose a service.');
+    const from = fromInput.value.trim();
+    const to = toInput.value.trim();
+    if(!(currentService==='movie' || currentService==='show')){
+      if(!from || !to) return alert('Enter From and To locations.');
+    }
+    const date = dateInput.value;
+    const time = timeInput.value;
+    const pax = (currentService === 'movie' || currentService === 'show') ? String(Math.max(selectedSeats.length,1)) : paxInput.value;
+    const seat = seatInput.value;
+    // compute price (same formula)
+    const base = serviceRates[currentService].base;
+    let mult = seat === 'premium' ? 1.5 : seat === 'vip' ? 2.2 : 1;
+    const price = Math.round(Math.max(Math.min(base * mult * pax + Math.random()*(base*0.2), serviceRates[currentService].max*pax), serviceRates[currentService].min*pax));
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const movieName = movieNameInput.value.trim();
+    const theatreName = theatreNameInput.value.trim();
+    const eventName = eventNameInput.value.trim();
+    const eventLocation = eventLocationInput.value.trim();
+    const ticket = {service:currentService.toUpperCase(), from, to, date, time, pax, seat, price, ref: genRef(), user, createdAt: Date.now(), seats: selectedSeats.slice(), movieName, theatreName, eventName, eventLocation};
+    lastTicket = ticket;
+    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+    tickets.push(ticket);
+    localStorage.setItem('tickets', JSON.stringify(tickets));
+    renderPreview(ticket);
+  });
+
+  function renderPreview(t){
+    const u = t.user || JSON.parse(localStorage.getItem('user') || 'null') || {};
+    previewBox.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><strong style="font-size:16px">${t.service} TICKET</strong><span style="color:${'#475569'}">Ref: ${t.ref}</span></div>
+        ${ (t.from || t.to) ? `<div style=\"font-size:15px\"><strong>${t.from}</strong> → <strong>${t.to}</strong></div>` : '' }
+        ${ t.service==='MOVIE' ? `<div style=\"color:#334155;font-size:13px\">Movie: <strong>${t.movieName || '-'}</strong> • Theatre: <strong>${t.theatreName || '-'}</strong></div>` : '' }
+        ${ t.service==='SHOW' ? `<div style=\"color:#334155;font-size:13px\">Event: <strong>${t.eventName || '-'}</strong> • Location: <strong>${t.eventLocation || '-'}</strong></div>` : '' }
+        <div style="color:#475569;font-size:13px">${t.date} • ${t.time} • ${ (t.service==='MOVIE' || t.service==='SHOW') ? ((t.seats && t.seats.length ? t.seats.length : t.pax) + ' seat(s)') : (t.pax + ' passenger(s)') } • ${capitalize(t.seat)}</div>
+        <div style="color:#334155;font-size:13px">Passenger: <strong>${u.name || 'Guest'}</strong> • ${u.mobile || '-'}</div>
+        ${t.seats && t.seats.length ? `<div style="color:#334155;font-size:13px">Seats: ${t.seats.join(', ')}</div>` : ''}
+        <div style="margin-top:6px;font-weight:800;font-size:16px">Total: ₹ ${t.price.toLocaleString()}</div>
+      </div>
+    `;
+    canvasWrap.style.display = 'none';
+  }
+
+  /* ---------- Download Ticket PNG (draw canvas) ---------- */
+  downloadBtn.addEventListener('click', async ()=>{
+    if(!lastTicket) return alert('No ticket to download. Create a ticket first.');
+    // draw ticket
+    await drawTicketOnCanvas(lastTicket);
+    // show canvas container
+    canvasWrap.style.display = 'block';
+    // download after small delay
+    setTimeout(()=>{
+      const link = document.createElement('a');
+      link.href = ticketCanvas.toDataURL('image/png');
+      link.download = `${lastTicket.service}_ticket_${Date.now()}.png`;
+      link.click();
+    },150);
+  });
+
+  async function drawTicketOnCanvas(ticket){
+    const cw = ticketCanvas.width;
+    const ch = ticketCanvas.height;
+    ctx.clearRect(0,0,cw,ch);
+    // background rounded rect
+    roundRect(ctx,10,10,cw-20,ch-20,14,'#ffffff');
+    // left logo image
+    const logo = await loadImage(logoPath);
+    ctx.drawImage(logo, 30, 30, 120, 120);
+    // heading
+    ctx.fillStyle = '#052035';
+    ctx.font = 'bold 22px Montserrat';
+    ctx.fillText(ticket.service + ' TICKET', 170, 60);
+    ctx.font = '12px Montserrat';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('Ref: ' + ticket.ref, 170, 84);
+
+    // route
+    if((ticket.from && ticket.to) && !(ticket.service==='MOVIE' || ticket.service==='SHOW')){
+      ctx.font = '700 18px Montserrat';
+      ctx.fillStyle = '#062637';
+      ctx.fillText(ticket.from + ' → ' + ticket.to, 30, 170);
+    }
+
+    // details
+    ctx.font = '14px Montserrat';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('Date: ' + ticket.date, 30, 200);
+    ctx.fillText(((ticket.service==='MOVIE') ? 'Show Time: ' : (ticket.service==='SHOW') ? 'Event Time: ' : 'Time: ') + ticket.time, 180, 200);
+    if(ticket.service==='MOVIE'){
+      const seatCount = (ticket.seats && ticket.seats.length) ? ticket.seats.length : Number(ticket.pax||1);
+      ctx.fillText('Seats: ' + seatCount, 30, 226);
+      ctx.fillText('Seat: ' + capitalize(ticket.seat), 180, 226);
+      ctx.fillText('Movie: ' + (ticket.movieName || '-'), 30, 250);
+      ctx.fillText('Theatre: ' + (ticket.theatreName || '-'), 180, 250);
+    } else if(ticket.service==='SHOW'){
+      const seatCount = (ticket.seats && ticket.seats.length) ? ticket.seats.length : Number(ticket.pax||1);
+      ctx.fillText('Seats: ' + seatCount, 30, 226);
+      ctx.fillText('Seat: ' + capitalize(ticket.seat), 180, 226);
+      ctx.fillText('Event: ' + (ticket.eventName || '-'), 30, 250);
+      ctx.fillText('Location: ' + (ticket.eventLocation || '-'), 180, 250);
+    } else {
+      ctx.fillText('Passengers: ' + ticket.pax, 30, 226);
+      ctx.fillText('Seat: ' + capitalize(ticket.seat), 180, 226);
+    }
+
+    // user details (right side below QR)
+    const u = ticket.user || JSON.parse(localStorage.getItem('user') || 'null') || {};
+    ctx.fillStyle = '#052035';
+    ctx.font = 'bold 14px Montserrat';
+    ctx.fillText('Passenger', cw - 260, 120);
+    ctx.font = '12px Montserrat';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('Name: ' + (u.name || 'Guest'), cw - 260, 140);
+    ctx.fillText('Mobile: ' + (u.mobile || '-'), cw - 260, 158);
+
+    // price box
+    ctx.fillStyle = '#0b84ff';
+    ctx.fillRect(cw - 260, ch - 130, 210, 90);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px Montserrat';
+    ctx.fillText('Amount', cw - 220, ch - 94);
+    ctx.font = 'bold 22px Montserrat';
+    ctx.fillText('₹ ' + ticket.price.toLocaleString(), cw - 220, ch - 60);
+
+    // QR placeholder
+    ctx.strokeStyle = '#0b1224';
+    ctx.strokeRect(cw - 120, 28, 80, 80);
+    ctx.font = '10px Montserrat';
+    ctx.fillStyle = '#0b1224';
+    ctx.fillText('QR', cw - 92, 78);
+  }
+
+  /* ---------- Helpers ---------- */
+  function genRef(){ return Math.random().toString(36).slice(2,9).toUpperCase(); }
+  function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function roundRect(ctx,x,y,w,h,r,fillColor){
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+    ctx.fillStyle = fillColor || '#fff';
+    ctx.fill();
+  }
+
+  function loadImage(src){
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=> resolve(img);
+      img.onerror = ()=> {
+        // fallback small canvas
+        const cv = document.createElement('canvas'); cv.width=120; cv.height=120;
+        const c = cv.getContext('2d'); c.fillStyle='#5b5ff7'; c.fillRect(0,0,120,120);
+        c.fillStyle='#fff'; c.font='bold 20px Montserrat'; c.fillText('LOGO',10,68);
+        resolve(cv);
+      };
+      img.src = src;
+    });
+  }
+</script>
+</body>
+</html>
+
+ 
+  
